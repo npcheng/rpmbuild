@@ -16,7 +16,7 @@ Version:       %{realver}
 Release:       0 
 License:       BSD-2-Clause
 Group:         Productivity/Networking/Web/Servers
-URL:           http://nginx.org/
+URL:           http://tengine.taobao.org/
 Summary:       HTTP and reverse proxy server, as well as a mail proxy server
  
 # Install-time parameters
@@ -29,12 +29,13 @@ BuildRequires: zlib-devel openssl-devel pcre-devel
 BuildRequires: libxml2-devel libxslt-devel gd-devel 
 BuildRoot:     %{_tmppath}/%{name}-root
 Source0:       http://tengine.taobao.org/download/%{realname}-%{realver}.tar.gz
-Source1:       nginx.logrotate
-Source2:       nginx.init
-Source3:       nginx.sysconfig
+Source1:       tengine.logrotate
+Source2:       tengine.init
+Source3:       tengine.sysconfig
+Source4:       nginx.conf 
  
 %description
-tengine is a HTTP server based on nginx
+tengine is a HTTP server ased on nginx
 nginx [engine x] is a HTTP and reverse proxy server, as well as a mail proxy server
  
 # Preparation step (unpackung and patching if necessary)
@@ -57,30 +58,38 @@ nginx [engine x] is a HTTP and reverse proxy server, as well as a mail proxy ser
  
 %install
 %__make install DESTDIR=%{buildroot}
-%__install -D -m644 %{S:1} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+%__install -d -m755 %{buildroot}%{_sysconfdir}/logrotate.d/
 %__install -d -m755 %{buildroot}%{_initrddir}
-#sed -r 's|##PREFIX##|%{PREFIX}|; s|##CONF_FILE##|%{CONF_FILE}|' %{S:2} > %{buildroot}%{_initrddir}/%{name}
-%__install -d -m755 %{buildroot}/%{_sysconfdir}/sysconfig
-%__install -d -m755 %{buildroot}/%{_sysconfdir}/sysconfig
-endif
-%endif
-%__install -d -m755 %{buildroot}%{_localstatedir}/cache/
+%__install -d -m755 %{buildroot}/%{_sysconfdir}/sysconfig/
+%__install -d -m755 %{buildroot}%{PREFIX}/cache
+%__install -d -m755 %{buildroot}%{PREFIX}/conf/available_site/
+%__install -d -m755 %{buildroot}%{PREFIX}/conf/conf.d/
+for i in proxy_temp fastcgi_temp uwsgi_temp scgi_temp 
+do
+   %__install -d -m755 $i %{buildroot}%{PREFIX}/cache/$i
+done
+
+%__install -D -m644 %{S:1} %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+%__install -D -m644 %{S:2} %{buildroot}%{_initrddir}/%{name}
+%__install -D -m755 %{S:3} %{buildroot}/%{_sysconfdir}/sysconfig/%{name}
+%__install -D -m755 %{S:3} %{buildroot}/%{PREFIX}/conf/
  
 %clean
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
  
 %files
 %defattr(-,root,root)
-%doc CHANGES CHANGES.ru LICENSE README
-%config(noreplace) %{_sysconfdir}/%{name}/*
-%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %{PREFIX}
+%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+%config(noreplace) %{PREFIX}/conf/nginx.conf
+%doc CHANGES CHANGES.ru LICENSE README
+#%config(noreplace) %{PREFIX}/%{name}/*
 %attr(0755,root,root) %{_initrddir}/%{name}
-%dir %attr(0755,%{USER},%{GROUP}) %{_localstatedir}/log/%{name}
-%{PREFIX}/html/*
+#%dir %attr(0755,%{USER},%{GROUP}) %{_localstatedir}/log/%{name}
+#%{PREFIX}/html/*
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
-%doc %{_mandir}/man8/*
-%dir %attr(0755,%{USER},%{GROUP}) %{_localstatedir}/cache/
+#%doc %{_mandir}/man8/*
+%dir %attr(0755,%{USER},%{GROUP}) %{PREFIX}/cache/
  
 %pre
 /usr/sbin/groupadd -r %{GROUP} &>/dev/null ||:
