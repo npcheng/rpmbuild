@@ -1,0 +1,4 @@
+# Configuration file for the tengine service
+
+# set this to the location of the tengine configuration file
+NGINX_CONF_FILE=/data/tengine/etc/nginx.conf
