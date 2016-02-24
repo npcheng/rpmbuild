@@ -51,7 +51,6 @@ case "$1" in
  do_stop
  do_start
  echo "."
- "."
  ;;
  *)
  echo "Usage: $SCRIPTNAME {start|stop|reload|restart}" >&2
